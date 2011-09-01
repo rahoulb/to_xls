@@ -158,16 +158,16 @@ describe ToXls::ArrayWriter do
     end
   end
 
-  describe "#to_xls" do
+  describe "#as_xls" do
     before do
       @mock_users = mock_users
       idx = 0
       @mock_users.each do |user|
-        user.stub!(:to_xls).and_return({ "Name" => user.name, :index => idx  })
+        user.stub!(:as_xls).and_return({ "Name" => user.name, :index => idx  })
         idx += 1
       end
     end
-    it "uses model's to_xls when present" do
+    it "uses model's as_xls when present" do
       xls = make_book(@mock_users)
       check_sheet( xls.worksheets.first,
         [ ["Name", :index],
