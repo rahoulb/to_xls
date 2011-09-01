@@ -1,6 +1,6 @@
 = to_xls gem
 
-This gem transform an Array or Hash into a excel file using the spreadsheet gem.
+This gem transform an Array, Hash or a collection of models that implement `to_xls` into a excel file using the spreadsheet gem.
 
 == Usage
 
@@ -13,6 +13,25 @@ This gem transform an Array or Hash into a excel file using the spreadsheet gem.
   @users.to_xls(:columns => [:name, {:company => [:name, :address]}]) # able to pick associations/called methods
   @users.to_xls(:columns => [:name, {:company => [:name, :address]}], :headers => [:name, :company, :address]) # provide better names for the associated columns
 
+
+== Implementing to_xls
+
+You can define a `to_xls(options = {})` method on a model and invoke `to_xls` on a collection of models. This must return a hash, therefore it can be simply implemented as a call to `as_json`. 
+
+  class User
+    def to_xls(options = {})
+      as_json
+    end
+  end
+
+  class Company
+    def to_xls(options = {})
+      {
+        :id => id.to_s,
+        "Name" => name
+      }
+    end
+  end
 
 == Example of use in Rails
 

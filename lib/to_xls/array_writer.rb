@@ -40,7 +40,7 @@ module ToXls
 
         @array.each do |model|
           row = sheet.row(row_index)
-          fill_row(row, columns, model)
+          fill_row(row, columns, model.respond_to?(:to_xls) ? model.to_xls(@options): model)
           row_index += 1
         end
       end
@@ -54,14 +54,18 @@ module ToXls
     end
 
     def can_get_columns_from_first_element?
-      @array.first && 
-      @array.first.respond_to?(:attributes) &&
-      @array.first.attributes.respond_to?(:keys) &&
-      @array.first.attributes.keys.is_a?(Array)
+      @array.first &&
+      @array.first.respond_to?(:to_xls) || (
+        @array.first.respond_to?(:attributes) &&
+        @array.first.attributes.respond_to?(:keys) &&
+        @array.first.attributes.keys.is_a?(Array)
+      )
     end
 
     def get_columns_from_first_element
-      @array.first.attributes.keys.sort_by {|sym| sym.to_s}.collect.to_a
+      @array.first.respond_to?(:to_xls) ? 
+        @array.first.to_xls(@options).keys : 
+        @array.first.attributes.keys.sort_by {|sym| sym.to_s}.collect.to_a
     end
 
     def headers
@@ -80,9 +84,9 @@ private
     def fill_row(row, column, model=nil)
       case column
       when String, Symbol
-        row.push(model ? model.send(column) : column)
+        row.push(model ? (model.is_a?(Hash) ? model[column] : model.send(column)) : column)
       when Hash
-        column.each{|key, values| fill_row(row, values, model && model.send(key))}
+        column.each{|key, values| fill_row(row, values, model && (model.is_a?(Hash) ? model[key] : model.send(key)))}
       when Array
         column.each{|value| fill_row(row, value, model)}
       else
