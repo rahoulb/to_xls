@@ -40,7 +40,7 @@ module ToXls
 
         @array.each do |model|
           row = sheet.row(row_index)
-          fill_row(row, columns, model.respond_to?(:to_xls) ? model.to_xls(@options): model)
+          fill_row(row, columns, model.respond_to?(:as_xls) ? model.as_xls(@options): model)
           row_index += 1
         end
       end
@@ -55,7 +55,7 @@ module ToXls
 
     def can_get_columns_from_first_element?
       @array.first &&
-      @array.first.respond_to?(:to_xls) || (
+      @array.first.respond_to?(:as_xls) || (
         @array.first.respond_to?(:attributes) &&
         @array.first.attributes.respond_to?(:keys) &&
         @array.first.attributes.keys.is_a?(Array)
@@ -63,8 +63,8 @@ module ToXls
     end
 
     def get_columns_from_first_element
-      @array.first.respond_to?(:to_xls) ? 
-        @array.first.to_xls(@options).keys : 
+      @array.first.respond_to?(:as_xls) ? 
+        @array.first.as_xls(@options).keys : 
         @array.first.attributes.keys.sort_by {|sym| sym.to_s}.collect.to_a
     end
 
