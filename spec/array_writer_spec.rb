@@ -179,4 +179,33 @@ describe ToXls::ArrayWriter do
     end
   end
 
+  describe "#as_xls with nested collections" do
+    before do
+      @mock_users = mock_users
+      idx = 0
+      @mock_users.each do |user|
+        user.company.stub!(:as_xls).and_return({ "Name" => user.company.name, "Address" => user.company.address })
+        user.stub!(:as_xls).and_return({ "Name" => user.name, :index => idx, "Companies" => [ user.company ] })
+        idx += 1
+      end
+    end
+    it "uses model's as_xls when present" do
+      xls = make_book(@mock_users)
+      check_sheet( xls.worksheets.first,
+        [ ["Name", :index, "Companies"],
+          ['Peter', 0, 1],
+          ['John', 1, 1],
+          ['Day9', 2, 1]
+        ]
+      )      
+      check_sheet( xls.worksheets.last,
+        [ ["Name", "Address"],
+          ['Acme', 'One Road'],
+          ['Acme', 'One Road'],
+          ['EADS', 'Another Road']
+        ]
+      )      
+    end
+  end
+
 end

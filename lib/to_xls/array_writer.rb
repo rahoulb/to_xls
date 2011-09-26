@@ -1,7 +1,3 @@
-require 'rubygems'
-require 'stringio'
-require 'spreadsheet'
-
 module ToXls
 
   class ArrayWriter
@@ -15,85 +11,21 @@ module ToXls
       write_io(io)
       io.string
     end
+    
+    def write_sheet(sheet)
+      DataWriter.new(@array, @options).write_to(sheet)
+    end
+
+    def write_book(book)
+      sheet = DataSheet.new(book, @options[:name] || 'Sheet 1', @options)
+      sheet.write(@array)
+    end
 
     def write_io(io)
       book = Spreadsheet::Workbook.new
       write_book(book)
       book.write(io)
     end
-
-    def write_book(book)
-      sheet = book.create_worksheet
-      sheet.name = @options[:name] || 'Sheet 1'
-      write_sheet(sheet)
-      return book
-    end
-
-    def write_sheet(sheet)
-      if columns.any?
-        row_index = 0
-
-        if headers_should_be_included?
-          fill_row(sheet.row(0), headers)
-          row_index = 1
-        end
-
-        @array.each do |model|
-          row = sheet.row(row_index)
-          fill_row(row, columns, model.respond_to?(:as_xls) ? model.as_xls(@options): model)
-          row_index += 1
-        end
-      end
-    end
-
-    def columns
-      return  @columns if @columns
-      @columns = @options[:columns]
-      raise ArgumentError.new(":columns (#{columns}) must be an array or nil") unless (@columns.nil? || @columns.is_a?(Array))
-      @columns ||=  can_get_columns_from_first_element? ? get_columns_from_first_element : []
-    end
-
-    def can_get_columns_from_first_element?
-      @array.first &&
-      @array.first.respond_to?(:as_xls) || (
-        @array.first.respond_to?(:attributes) &&
-        @array.first.attributes.respond_to?(:keys) &&
-        @array.first.attributes.keys.is_a?(Array)
-      )
-    end
-
-    def get_columns_from_first_element
-      @array.first.respond_to?(:as_xls) ? 
-        @array.first.as_xls(@options).keys : 
-        @array.first.attributes.keys.sort_by {|sym| sym.to_s}.collect.to_a
-    end
-
-    def headers
-      return  @headers if @headers
-      @headers = @options[:headers] || columns
-      raise ArgumentError, ":headers (#{@headers.inspect}) must be an array" unless @headers.is_a? Array
-      @headers
-    end
-
-    def headers_should_be_included?
-      @options[:headers] != false
-    end
-
-private
-
-    def fill_row(row, column, model=nil)
-      case column
-      when String, Symbol
-        row.push(model ? (model.is_a?(Hash) ? model[column] : model.send(column)) : column)
-      when Hash
-        column.each{|key, values| fill_row(row, values, model && (model.is_a?(Hash) ? model[key] : model.send(key)))}
-      when Array
-        column.each{|value| fill_row(row, value, model)}
-      else
-        raise ArgumentError, "column #{column} has an invalid class (#{ column.class })"
-      end
-    end
-
   end
 
 end

@@ -33,7 +33,7 @@ In the controller where you want to export to excel, add the format.xls line.
 
 == Implementing as_xls
 
-Alternatively, you can define a as_xls(options = {}) method on a model. This should return a hash.
+Alternatively, you can define an `as_xls(options = {})` method on a model. This should return a hash.
 
   class Company
     def as_xls(options = {})
@@ -49,6 +49,28 @@ This way you can also translate the top-level JSON into XLS.
   class User
     def as_xls(options = {})
       as_json
+    end
+  end
+
+== Nested Collections
+
+You can return nested collections within `as_xls`. These are rendered as additional worksheets. The following code will produce a second worksheet called "Tasks" with all users' tasks.
+
+  class User
+    def as_xls(options = {})
+      {
+        "Name" => name,
+        "Tasks" => tasks
+      }
+    end
+  end
+
+  class Task
+    def as_xls(options = {})
+      {
+        "User" => user.name,
+        "Duration" => duration,
+      }
     end
   end
 
